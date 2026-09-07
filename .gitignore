@@ -31,3 +31,5 @@ env/
 venv/
 .vscode/
 .idea/
+
+PUSH_TO_GITHUB.bat
