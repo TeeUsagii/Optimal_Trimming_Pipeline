@@ -1,7 +1,6 @@
-﻿# mtDNA Sanger Analysis Suite & Optimal Trimming Pipeline
+# mtDNA Sanger Analysis Suite & Optimal Trimming Pipeline
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)]()
 [![Sequencher](https://img.shields.io/badge/Integration-Sequencher%20v5.4.6-orange.svg)]()
 
@@ -97,10 +96,4 @@ python tests/test_pipeline.py
 | **REVIEW** | 88% - 98% | <= 2 | <= 2 | < 20 | Cần chuyên viên soi lại biểu đồ điện di đồ (HTML). |
 | **DENY** | < 85% | >= 3 | >= 5 | >= 20 | **Không phân tích — Khuyến cáo làm lại mẫu trong phòng lab!** |
 
----
 
-## 👤 Tác Giả & Bản Quyền
-
-- **Phát triển:** Quan Nguyen ([@Quannguyen513](https://github.com/Quannguyen513))
-- **Email liên hệ:** quannt051199@gmail.com
-- **Giấy phép:** MIT License
