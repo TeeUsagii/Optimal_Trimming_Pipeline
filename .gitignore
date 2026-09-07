@@ -15,6 +15,15 @@ output_real/
 test_exe_output/
 *.log
 
+# Raw Sanger trace data & local lab samples (do not commit patient data)
+*.ab1
+data/sample_ab1/
+
+# Generated results & reports
+data/html_reports/
+data/trimmed_fasta/
+data/*.csv
+
 # Environment & IDE
 .env
 .venv
