@@ -1,0 +1,117 @@
+==============================================================================
+   mtDNA SANGER ANALYSIS SUITE - HƯỚNG DẪN SỬ DỤNG TRÊN MỌI MÁY TÍNH
+==============================================================================
+
+Phần mềm được thiết kế đóng gói độc lập (Portable Suite) phục vụ phân tích
+Sanger tự động cho các máy giải trình tự mao quản (SeqStudio Flex, ABI 3500/3130).
+
+------------------------------------------------------------------------------
+LỰA CHỌN 1: DÙNG BẢN ĐÓNG GÓI SẴN (KHÔNG CẦN CÀI PYTHON - KHUYÊN DÙNG)
+------------------------------------------------------------------------------
+Trong thư mục: dist\mtDNA_Sanger_Suite\
+Đã được biên dịch sẵn toàn bộ mã máy (.exe) cùng các thư viện nhị phân:
+
+1. Chạy Giao diện đồ họa (GUI):
+   - Click đúp vào file:
+     --> "dist\mtDNA_Sanger_Suite\mtDNA_Sanger_Suite.exe"
+     (hoặc click file "dist\mtDNA_Sanger_Suite\CHAY_GIAO_DIEN.bat")
+   - Bấm "Chọn thư mục..." để chọn nơi chứa file .ab1.
+   - Bấm "▶ BẮT ĐẦU PHÂN TÍCH HÀNG LOẠT (1-CLICK RUN)".
+
+2. Chạy Dòng lệnh nhanh (CLI):
+   - Click đúp vào file:
+     --> "dist\mtDNA_Sanger_Suite\CHAY_CLI.bat"
+   - Hoặc mở Command Prompt / PowerShell tại thư mục đó và gõ:
+     mtDNA_CLI.exe --input "đường_dẫn_chứa_ab1" --output "đường_dẫn_kết_quả"
+
+* LƯU Ý: Bạn có thể sao chép nguyên thư mục "dist\mtDNA_Sanger_Suite" sang bất
+  kỳ máy tính phòng lab nào chạy Windows để dùng ngay lập tức!
+
+------------------------------------------------------------------------------
+LỰA CHỌN 2: CHẠY TRỰC TIẾP TỪ MÃ NGUỒN PYTHON
+------------------------------------------------------------------------------
+Dành cho máy tính đã cài đặt môi trường Python:
+
+1. Cài đặt thư viện phụ thuộc (chỉ làm 1 lần):
+   - Click đúp chuột: "1_CAI_DAT_THU_VIEN.bat"
+   - Script sẽ tự động kiểm tra và cài đặt biopython, pandas, numpy.
+
+2. Khởi chạy Giao diện đồ họa (GUI):
+   - Click đúp chuột: "2_CHAY_GIAO_DIEN_GUI.bat"
+
+3. Khởi chạy Dòng lệnh (CLI):
+   - Click đúp chuột: "3_CHAY_DONG_LENH_CLI.bat"
+
+4. Tự đóng gói lại file .exe bất cứ khi nào bạn chỉnh sửa mã nguồn:
+   - Click đúp chuột: "4_DONG_GOI_EXE.bat"
+   - Hệ thống sẽ tự động build lại phiên bản mới nhất vào thư mục dist\.
+
+------------------------------------------------------------------------------
+QUY TẮC ĐẶT TÊN FILE TỰ ĐỘNG CỦA HỆ THỐNG
+------------------------------------------------------------------------------
+Hệ thống tự động bóc tách thông tin theo chuẩn đặt tên plate 96 giếng:
+Định dạng: [Well]_[SampleID]-[Primer]_[Date]_[Time].ab1
+Ví dụ thực tế:
+  - A05_L1-F15971_20260718_113213.ab1 -> Mẫu L1, Mồi F15971 (Vùng HV1, Forward)
+  - B05_L1-R16410_20260718_113216.ab1 -> Mẫu L1, Mồi R16410 (Vùng HV1, Reverse)
+  - C05_L1-F15_20260718_113219.ab1    -> Mẫu L1, Mồi F15    (Vùng HV2/HV3, Forward)
+  - D05_L1-R639_20260718_113222.ab1   -> Mẫu L1, Mồi R639   (Vùng HV2/HV3, Reverse)
+
+Hệ thống sẽ tự gom đủ 4 file này lại để ráp thành 2 Contig chuẩn:
+  * Vùng HV1: Cắt gọt chuẩn xác khung 16024 - 16365.
+  * Vùng HV2/HV3: Cắt gọt chuẩn xác khung 73 - 576.
+
+------------------------------------------------------------------------------
+KẾT QUẢ ĐẦU RA VÀ TÍCH HỢP VÀO SEQUENCHER 5.4.6 (NON-DESTRUCTIVE WORKFLOW)
+------------------------------------------------------------------------------
+Kết quả phân tích được xuất toàn diện tại thư mục output/ (hoặc output_real/):
+
+1. Bảng Khuyến Nghị Vị Trí Cắt (DẠNG A): "trimming_recommendations.csv"
+   - Giữ nguyên 100% dữ liệu gốc file .ab1.
+   - Cung cấp chính xác tọa độ cắt 5' (Suggested_5p_Cut), 3' (Suggested_3p_Cut) và
+     hướng dẫn thao tác cho Sequencher:
+     "Trim 5' bases 1-X, Trim 3' from Y"
+   - Cảnh báo trực tiếp trạng thái QC (PASS / REVIEW / DENY) và khuyến nghị xử lý.
+
+2. Điện Di Đồ Tương Tác 4 Kênh (DẠNG C): "html_reports/*_chromatogram.html"
+   - Trực quan hóa sóng điện di thực tế (A: Xanh lá, C: Xanh dương, G: Vàng nâu, T: Đỏ).
+   - Vạch bóng mờ vùng cắt 5' và 3' kèm nhãn tọa độ và nguyên nhân.
+   - Vạch vàng vùng trượt Poly-C được bảo toàn phục vụ đối sánh mồi xuôi & ngược.
+   - Chuỗi tham chiếu chuẩn rCRS chạy song song kèm ký hiệu trùng khớp (.) và SNPs.
+   - BANNER CẢNH BÁO MÀU ĐỎ NỔI BẬT NẾU MẪU BỊ GÁN NHÃN "DENY".
+
+3. Bảng Tổng Hợp Kiểu Gen: "mtDNA_batch_summary.csv"
+   - Bảng tổng hợp kiểu gen, danh sách SNPs, độ bao phủ (%), số điểm dị thể (+),
+     số điểm chập peak (?) và khuyến nghị phòng lab.
+
+4. File FASTA Đồng Thuận: "trimmed_fasta/"
+   - File FASTA contig và FASTA từng chiều đã cắt lọc nhiễu ngoài.
+
+------------------------------------------------------------------------------
+TIÊU CHUẨN KIỂM SOÁT CHẤT LƯỢNG (QC) & GÁN NHÃN "DENY" (CẦN LÀM LẠI MẪU)
+------------------------------------------------------------------------------
+Hệ thống tự động đánh giá và phân loại chất lượng theo 3 mức độ:
+
+[✓] PASS (Đạt tiêu chuẩn chất lượng cao):
+    - Độ bao phủ dải mục tiêu >= 98% (HV1: 16024-16365, HV2/HV3: 73-576).
+    - Không có điểm mâu thuẫn 2 chiều (+), không có lỗi chập peak (?).
+    - Kết quả tin cậy tuyệt đối, xuất báo cáo ngay.
+
+[👁️] REVIEW_NEEDED (Cần chuyên viên soi lại biểu đồ điện di đồ):
+    - Tồn tại 1 - 2 điểm dị thể (+) hoặc 1 - 2 điểm nhiễu nhẹ (?).
+    - Độ bao phủ đạt từ 88% - 98%.
+    - Chuyên viên mở file HTML Chromatogram để kiểm tra và xác nhận lần cuối.
+
+[⚠️] DENY (KHUYẾN CÁO PHÒNG LAB LÀM LẠI MẪU - KHÔNG ĐƯA VÀO PHÂN TÍCH):
+    Hệ thống sẽ lập tức gắn cờ DENY và đưa ra cảnh báo đỏ nếu phát hiện:
+    1. Độ bao phủ dải mục tiêu < 85% do mồi xuôi và mồi ngược không phủ kín.
+    2. Khoảng đứt đoạn lớn >= 20 nucleotide liên tiếp trong dải mục tiêu
+       (2 mồi xuôi - ngược không giao nhau, tạo khoảng trống không đọc được).
+    3. Nhiễu quang học / chập peak không rõ nguyên nhân (?) >= 5 điểm.
+    4. Mâu thuẫn 2 chiều không thể phân giải (+) >= 3 điểm.
+    5. Số lượng đột biến dị thường >= 20 SNPs (nghi ngờ nhiễm tạp DNA hoặc lỗi PCR).
+    6. Mẫu không thể căn gióng với rCRS (primer dimer, sản phẩm phụ hoặc rác tín hiệu).
+
+=> Khi gặp nhãn DENY: Kỹ thuật viên KHÔNG import vào Sequencher mà cần chạy lại
+   PCR / giải trình tự mao quản lại mẫu trong phòng thí nghiệm!
+

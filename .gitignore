@@ -1,0 +1,24 @@
+﻿# Python artifacts
+__pycache__/
+*.py[cod]
+*.class
+*.so
+
+# Build & distribution
+build/
+dist/
+*.spec
+
+# Pipeline run outputs
+output/
+output_real/
+test_exe_output/
+*.log
+
+# Environment & IDE
+.env
+.venv
+env/
+venv/
+.vscode/
+.idea/
