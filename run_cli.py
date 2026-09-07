@@ -73,7 +73,7 @@ def detect_sample_info(file_path: str) -> Tuple[Optional[str], Optional[str], Op
 
 def run_pipeline(input_dir: str, rcrs_path: str, output_dir: str, peak_thresh: float = 0.25, conflict_thresh: float = 0.70):
     print("=" * 70)
-    print("      mtDNA SANGER ANALYSIS SUITE (HIGH-THROUGHPUT ENGINE)")
+    print("      OPTIMAL TRIMMING PIPELINE (HIGH-THROUGHPUT ENGINE)")
     print("=" * 70)
     print(f"[+] Thư mục dữ liệu thô: {input_dir}")
     print(f"[+] Chuỗi tham chiếu rCRS: {rcrs_path}")
@@ -332,7 +332,7 @@ def run_pipeline(input_dir: str, rcrs_path: str, output_dir: str, peak_thresh: f
     print("=" * 70)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="mtDNA Sanger High-Throughput Suite")
+    parser = argparse.ArgumentParser(description="Optimal Trimming Pipeline for Human mtDNA Sanger Sequencing")
     parser.add_argument("--input", "-i", default="./data/sample_ab1", help="Thư mục chứa file .ab1")
     parser.add_argument("--rcrs", "-r", default="./data/rCRS.fasta", help="Đường dẫn file rCRS.fasta")
     parser.add_argument("--output", "-o", default="./output", help="Thư mục lưu kết quả")

@@ -1,4 +1,4 @@
-# mtDNA Sanger Analysis Suite & Optimal Trimming Pipeline
+# Optimal Trimming Pipeline (Human mtDNA Sanger Sequencing)
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows-lightgrey.svg)]()

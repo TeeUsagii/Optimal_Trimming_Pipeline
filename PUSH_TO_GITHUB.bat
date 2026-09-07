@@ -1,7 +1,7 @@
-﻿@echo off
+@echo off
 chcp 65001 > nul
 echo ============================================================
-echo   mtDNA SANGER ANALYSIS SUITE - ĐẨY DỰ ÁN LÊN GITHUB
+echo   OPTIMAL TRIMMING PIPELINE - ĐẨY DỰ ÁN LÊN GITHUB
 echo ============================================================
 echo.
 echo Đang đồng bộ và đẩy mã nguồn lên nhánh main:

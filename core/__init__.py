@@ -1,5 +1,5 @@
 """
-mtDNA Sanger Analysis Suite - Core Engine
+Optimal Trimming Pipeline - Core Engine
 Phát triển chuyên biệt cho phân tích tự động quy mô lớn mtDNA (HV1, HV2, HV3).
 """
 

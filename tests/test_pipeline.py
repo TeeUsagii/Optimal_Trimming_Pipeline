@@ -16,7 +16,7 @@ from core.aligner import RCRSAligner
 from core.trimmer import SmartTrimmer
 from core.assembler import ContigAssembler
 
-class TestMtDNASuite(unittest.TestCase):
+class TestOptimalTrimmingPipeline(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.rcrs_path = os.path.join(CURRENT_DIR, "data", "rCRS.fasta")

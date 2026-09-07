@@ -1,5 +1,5 @@
 ==============================================================================
-   mtDNA SANGER ANALYSIS SUITE - HƯỚNG DẪN SỬ DỤNG TRÊN MỌI MÁY TÍNH
+   OPTIMAL TRIMMING PIPELINE - HƯỚNG DẪN SỬ DỤNG TRÊN MỌI MÁY TÍNH
 ==============================================================================
 
 Phần mềm được thiết kế đóng gói độc lập (Portable Suite) phục vụ phân tích
@@ -8,23 +8,23 @@ Sanger tự động cho các máy giải trình tự mao quản (SeqStudio Flex,
 ------------------------------------------------------------------------------
 LỰA CHỌN 1: DÙNG BẢN ĐÓNG GÓI SẴN (KHÔNG CẦN CÀI PYTHON - KHUYÊN DÙNG)
 ------------------------------------------------------------------------------
-Trong thư mục: dist\mtDNA_Sanger_Suite\
+Trong thư mục: dist\Optimal_Trimming_Pipeline\
 Đã được biên dịch sẵn toàn bộ mã máy (.exe) cùng các thư viện nhị phân:
 
 1. Chạy Giao diện đồ họa (GUI):
    - Click đúp vào file:
-     --> "dist\mtDNA_Sanger_Suite\mtDNA_Sanger_Suite.exe"
-     (hoặc click file "dist\mtDNA_Sanger_Suite\CHAY_GIAO_DIEN.bat")
+     --> "dist\Optimal_Trimming_Pipeline\Optimal_Trimming_Pipeline.exe"
+     (hoặc click file "dist\Optimal_Trimming_Pipeline\CHAY_GIAO_DIEN.bat")
    - Bấm "Chọn thư mục..." để chọn nơi chứa file .ab1.
    - Bấm "▶ BẮT ĐẦU PHÂN TÍCH HÀNG LOẠT (1-CLICK RUN)".
 
 2. Chạy Dòng lệnh nhanh (CLI):
    - Click đúp vào file:
-     --> "dist\mtDNA_Sanger_Suite\CHAY_CLI.bat"
+     --> "dist\Optimal_Trimming_Pipeline\CHAY_CLI.bat"
    - Hoặc mở Command Prompt / PowerShell tại thư mục đó và gõ:
-     mtDNA_CLI.exe --input "đường_dẫn_chứa_ab1" --output "đường_dẫn_kết_quả"
+     Optimal_Trimming_CLI.exe --input "đường_dẫn_chứa_ab1" --output "đường_dẫn_kết_quả"
 
-* LƯU Ý: Bạn có thể sao chép nguyên thư mục "dist\mtDNA_Sanger_Suite" sang bất
+* LƯU Ý: Bạn có thể sao chép nguyên thư mục "dist\Optimal_Trimming_Pipeline" sang bất
   kỳ máy tính phòng lab nào chạy Windows để dùng ngay lập tức!
 
 ------------------------------------------------------------------------------

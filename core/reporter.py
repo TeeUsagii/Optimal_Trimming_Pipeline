@@ -10,7 +10,7 @@ except ImportError:
 
 class SuiteReporter:
     """
-    Module xuất báo cáo đa luồng cho mtDNA Sanger Analysis Suite:
+    Module xuất báo cáo cho Optimal Trimming Pipeline:
     1. Xuất file FASTA bảo toàn chuỗi gốc kèm tọa độ cắt đề xuất trong Header.
     2. Xuất Bảng khuyến nghị vị trí cắt chi tiết (trimming_recommendations.csv) cho Sequencher 5.4.6 (Dạng A).
     3. Xuất bảng tổng hợp kết quả đột biến và chất lượng (mtDNA_batch_summary.csv).

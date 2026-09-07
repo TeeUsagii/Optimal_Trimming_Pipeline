@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 > nul
 echo ============================================================
-echo   mtDNA SANGER ANALYSIS SUITE - KHOI DONG GIAO DIEN (GUI)
+echo   OPTIMAL TRIMMING PIPELINE - KHỞI ĐỘNG GIAO DIỆN (GUI)
 echo ============================================================
 echo.
 

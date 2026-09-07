@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 > nul
 echo ============================================================
-echo   mtDNA SANGER ANALYSIS SUITE - CAI DAT THU VIEN
+echo   OPTIMAL TRIMMING PIPELINE - CÀI ĐẶT THƯ VIỆN
 echo ============================================================
 echo.
 echo Dang kiem tra Python va cai dat cac thu vien can thiet...

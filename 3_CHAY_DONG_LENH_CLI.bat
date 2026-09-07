@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 > nul
 echo ============================================================
-echo   mtDNA SANGER ANALYSIS SUITE - CHAY DONG LENH (CLI)
+echo   OPTIMAL TRIMMING PIPELINE - CHẠY DÒNG LỆNH (CLI)
 echo ============================================================
 echo.
 

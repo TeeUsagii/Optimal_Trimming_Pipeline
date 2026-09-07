@@ -34,10 +34,10 @@ if EXE_DIR not in sys.path:
 
 from run_cli import run_pipeline
 
-class MtDNASuiteGUI:
+class OptimalTrimmingGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("mtDNA Sanger Analysis Suite (High-Throughput 400-500 Samples/Day)")
+        self.root.title("Optimal Trimming Pipeline - Human mtDNA Sanger Sequencing")
         self.root.geometry("820x680")
         self.root.minsize(760, 600)
 
@@ -52,7 +52,7 @@ class MtDNASuiteGUI:
         header_frame = tk.Frame(self.root, bg="#1e293b", padx=16, pady=12)
         header_frame.pack(fill=tk.X)
 
-        title_label = tk.Label(header_frame, text="mtDNA SANGER ANALYSIS SUITE", font=("Segoe UI", 15, "bold"), fg="#38bdf8", bg="#1e293b")
+        title_label = tk.Label(header_frame, text="OPTIMAL TRIMMING PIPELINE", font=("Segoe UI", 15, "bold"), fg="#38bdf8", bg="#1e293b")
         title_label.pack(anchor=tk.W)
 
         subtitle_label = tk.Label(
@@ -237,5 +237,5 @@ class MtDNASuiteGUI:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = MtDNASuiteGUI(root)
+    app = OptimalTrimmingGUI(root)
     root.mainloop()
