@@ -20,7 +20,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [+] Da tim thay Python! Dang cai dat biopython, pandas, numpy...
+echo [+] Da tim thay Python! Dang cai dat biopython, pandas, numpy, customtkinter, pillow...
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 

@@ -22,20 +22,24 @@ if %errorlevel% neq 0 (
 
 echo.
 echo [2/4] Đang đóng gói Giao diện đồ họa (app_gui.py -> Optimal_Trimming_Pipeline.exe)...
-python -m PyInstaller --noconfirm --onedir --windowed --name "Optimal_Trimming_Pipeline" --add-data "data;data" app_gui.py
+python -m PyInstaller --noconfirm --onedir --windowed --name "Optimal_Trimming_Pipeline" --icon "assets\icon.ico" --add-data "data;data" --add-data "assets;assets" --collect-all customtkinter app_gui.py
 
 echo.
 echo [3/4] Đang đóng gói Dòng lệnh CLI (run_cli.py -> Optimal_Trimming_CLI.exe)...
-python -m PyInstaller --noconfirm --onedir --console --name "Optimal_Trimming_CLI" run_cli.py
+python -m PyInstaller --noconfirm --onedir --console --name "Optimal_Trimming_CLI" --icon "assets\icon.ico" --add-data "data;data" run_cli.py
 copy /Y dist\Optimal_Trimming_CLI\Optimal_Trimming_CLI.exe dist\Optimal_Trimming_Pipeline\ > nul
 rd /S /Q dist\Optimal_Trimming_CLI > nul 2>&1
 
 echo.
-echo [4/4] Đang sao chép thư mục dữ liệu mẫu và tài liệu vào bản phân phối...
+echo [4/4] Đang sao chép thư mục dữ liệu mẫu, biểu tượng và tài liệu vào bản phân phối...
 xcopy /E /I /Y data dist\Optimal_Trimming_Pipeline\data > nul
+xcopy /E /I /Y assets dist\Optimal_Trimming_Pipeline\assets > nul
 copy /Y HUONG_DAN_SU_DUNG.txt dist\Optimal_Trimming_Pipeline\ > nul
-echo start "" Optimal_Trimming_Pipeline.exe > dist\Optimal_Trimming_Pipeline\CHAY_GIAO_DIEN.bat
-echo Optimal_Trimming_CLI.exe --input "data\sample_ab1\real data" --rcrs "data\rCRS.fasta" --output "output_real" > dist\Optimal_Trimming_Pipeline\CHAY_CLI.bat
+copy /Y README.md dist\Optimal_Trimming_Pipeline\ > nul
+echo @echo off > dist\Optimal_Trimming_Pipeline\CHAY_GIAO_DIEN.bat
+echo start "" "%%~dp0Optimal_Trimming_Pipeline.exe" >> dist\Optimal_Trimming_Pipeline\CHAY_GIAO_DIEN.bat
+echo @echo off > dist\Optimal_Trimming_Pipeline\CHAY_CLI.bat
+echo "%%~dp0Optimal_Trimming_CLI.exe" --input "data\sample_ab1\real data" --rcrs "data\rCRS.fasta" --output "output_real" >> dist\Optimal_Trimming_Pipeline\CHAY_CLI.bat
 echo pause >> dist\Optimal_Trimming_Pipeline\CHAY_CLI.bat
 
 echo.

@@ -56,10 +56,10 @@ Optimal_Trimming_Pipeline/
 │   └── sample_ab1/         # Dữ liệu thực tế 24 file .ab1 từ SeqStudio Flex 24
 ├── tests/
 │   └── test_pipeline.py    # Bộ kiểm thử tự động (Unit Test Suite 6/6 PASS)
-├── app_gui.py              # Giao diện đồ họa Desktop (Tkinter)
+├── app_gui.py              # Giao diện đồ họa Minimalist Design (CustomTkinter)
 ├── run_cli.py              # Công cụ dòng lệnh xử lý hàng loạt tốc độ cao
 ├── 1_CAI_DAT_THU_VIEN.bat  # Cài đặt thư viện tự động
-├── 2_CHAY_GIAO_DIEN_GUI.bat# Chạy ứng dụng giao diện
+├── 2_CHAY_GIAO_DIEN_GUI.bat# Chạy ứng dụng giao diện Python
 ├── 3_CHAY_DONG_LENH_CLI.bat# Chạy xử lý dòng lệnh
 ├── 4_DONG_GOI_EXE.bat      # Script đóng gói thành .EXE độc lập (PyInstaller)
 ├── requirements.txt        # Danh sách thư viện phụ thuộc
@@ -70,13 +70,18 @@ Optimal_Trimming_Pipeline/
 
 ## 🚀 Hướng Dẫn Sử Dụng
 
-### Lựa chọn 1: Sử dụng Giao diện đồ họa (GUI)
-1. Chạy file `2_CHAY_GIAO_DIEN_GUI.bat` (hoặc `python app_gui.py`).
-2. Chọn thư mục chứa file `.ab1` cần phân tích.
-3. Bấm **▶ BẮT ĐẦU PHÂN TÍCH HÀNG LOẠT (1-CLICK RUN)**.
-4. Bấm **Mở Bảng Khuyến Nghị Cắt (CSV)** để mở ngay kết quả trong Excel.
+### Lựa chọn 1: Sử dụng Bản Đóng Gói .EXE (Khuyên Dùng - Không Cần Cài Python)
+Chỉ cần sao chép thư mục `dist\Optimal_Trimming_Pipeline` sang máy tính phòng lab:
+- Chạy giao diện đồ họa: Click đúp `dist\Optimal_Trimming_Pipeline\Optimal_Trimming_Pipeline.exe` (hoặc file `CHAY_GIAO_DIEN.bat`).
+- Chạy dòng lệnh nhanh: Click đúp `dist\Optimal_Trimming_Pipeline\CHAY_CLI.bat`.
 
-### Lựa chọn 2: Sử dụng Dòng lệnh (CLI)
+### Lựa chọn 2: Sử dụng Giao diện đồ họa Python (GUI Minimalist Design)
+1. Chạy file `2_CHAY_GIAO_DIEN_GUI.bat` (hoặc `python app_gui.py`).
+2. Chọn thư mục chứa file `.ab1` cần phân tích (hệ thống tự động phát hiện số lượng file và số mẫu).
+3. Bấm **▶ BẮT ĐẦU PHÂN TÍCH HÀNG LOẠT (1-CLICK RUN)**.
+4. Xem kết quả trực tiếp trên Dashboard QC (PASS, REVIEW, DENY), double click để mở Điện di đồ HTML tương tác hoặc bấm **Mở Bảng Khuyến Nghị Cắt (CSV)**.
+
+### Lựa chọn 3: Sử dụng Dòng lệnh (CLI)
 ```bash
 python run_cli.py --input "data/sample_ab1/real data" --rcrs "data/rCRS.fasta" --output "output"
 ```

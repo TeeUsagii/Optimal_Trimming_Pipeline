@@ -6,17 +6,28 @@ Phần mềm được thiết kế đóng gói độc lập (Portable Suite) ph�
 Sanger tự động cho các máy giải trình tự mao quản (SeqStudio Flex, ABI 3500/3130).
 
 ------------------------------------------------------------------------------
-LỰA CHỌN 1: DÙNG BẢN ĐÓNG GÓI SẴN (KHÔNG CẦN CÀI PYTHON - KHUYÊN DÙNG)
+LỰA CHỌN 1: DÙNG BẢN ĐÓNG GÓI SẴN .EXE (KHÔNG CẦN CÀI PYTHON - KHUYÊN DÙNG)
 ------------------------------------------------------------------------------
 Trong thư mục: dist\Optimal_Trimming_Pipeline\
-Đã được biên dịch sẵn toàn bộ mã máy (.exe) cùng các thư viện nhị phân:
+Đã được biên dịch sẵn toàn bộ mã máy (.exe) độc lập cùng toàn bộ thư viện:
 
-1. Chạy Giao diện đồ họa (GUI):
+1. Chạy Giao diện đồ họa Minimalist Design (GUI):
    - Click đúp vào file:
      --> "dist\Optimal_Trimming_Pipeline\Optimal_Trimming_Pipeline.exe"
      (hoặc click file "dist\Optimal_Trimming_Pipeline\CHAY_GIAO_DIEN.bat")
-   - Bấm "Chọn thư mục..." để chọn nơi chứa file .ab1.
-   - Bấm "▶ BẮT ĐẦU PHÂN TÍCH HÀNG LOẠT (1-CLICK RUN)".
+   - Giao diện Minimalist hiện đại gồm 3 Tab tiện lợi:
+     + Tab 1 [⚡ Phân Tích & Giám Sát]:
+       * Chọn thư mục chứa file .ab1 (Hệ thống tự động phát hiện số file và số mẫu).
+       * Bấm "▶ BẮT ĐẦU PHÂN TÍCH HÀNG LOẠT (1-CLICK RUN)".
+       * Theo dõi thanh tiến độ % và nhật ký xử lý trực tiếp (real-time console).
+     + Tab 2 [📊 Kết Quả QC & Sequencher]:
+       * Thống kê thẻ KPI: Tổng mẫu, PASS (Đạt chuẩn), REVIEW (Soi lại), DENY (Làm lại).
+       * Bảng kết quả tương tác trực tiếp với nhãn màu phân biệt.
+       * Double-click vào bất kỳ dòng nào để MỞ TRỰC TIẾP Điện di đồ tương tác HTML.
+       * Nút 1-click mở file Excel Form A (trimming_recommendations.csv).
+     + Tab 3 [⚙️ Cài Đặt Thuật Toán Tracy]:
+       * Tinh chỉnh ngưỡng Tracy Secondary Ratio và Conflict Ratio.
+       * Tra cứu quy chuẩn tọa độ rCRS và ma trận tiêu chuẩn QC.
 
 2. Chạy Dòng lệnh nhanh (CLI):
    - Click đúp vào file:
@@ -25,7 +36,7 @@ Trong thư mục: dist\Optimal_Trimming_Pipeline\
      Optimal_Trimming_CLI.exe --input "đường_dẫn_chứa_ab1" --output "đường_dẫn_kết_quả"
 
 * LƯU Ý: Bạn có thể sao chép nguyên thư mục "dist\Optimal_Trimming_Pipeline" sang bất
-  kỳ máy tính phòng lab nào chạy Windows để dùng ngay lập tức!
+  kỳ máy tính phòng lab nào chạy Windows để dùng ngay lập tức mà KHÔNG CẦN cài Python!
 
 ------------------------------------------------------------------------------
 LỰA CHỌN 2: CHẠY TRỰC TIẾP TỪ MÃ NGUỒN PYTHON
@@ -34,17 +45,17 @@ Dành cho máy tính đã cài đặt môi trường Python:
 
 1. Cài đặt thư viện phụ thuộc (chỉ làm 1 lần):
    - Click đúp chuột: "1_CAI_DAT_THU_VIEN.bat"
-   - Script sẽ tự động kiểm tra và cài đặt biopython, pandas, numpy.
+   - Script sẽ tự động kiểm tra và cài đặt biopython, pandas, numpy, customtkinter, pillow.
 
 2. Khởi chạy Giao diện đồ họa (GUI):
-   - Click đúp chuột: "2_CHAY_GIAO_DIEN_GUI.bat"
+   - Click đúp chuột: "2_CHAY_GIAO_DIEN_GUI.bat" (hoặc python app_gui.py)
 
 3. Khởi chạy Dòng lệnh (CLI):
    - Click đúp chuột: "3_CHAY_DONG_LENH_CLI.bat"
 
 4. Tự đóng gói lại file .exe bất cứ khi nào bạn chỉnh sửa mã nguồn:
    - Click đúp chuột: "4_DONG_GOI_EXE.bat"
-   - Hệ thống sẽ tự động build lại phiên bản mới nhất vào thư mục dist\.
+   - Hệ thống sẽ tự động build lại phiên bản mới nhất vào thư mục dist\Optimal_Trimming_Pipeline\.
 
 ------------------------------------------------------------------------------
 QUY TẮC ĐẶT TÊN FILE TỰ ĐỘNG CỦA HỆ THỐNG

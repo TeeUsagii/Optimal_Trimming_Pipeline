@@ -3,7 +3,7 @@ import sys
 import glob
 import re
 import argparse
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Callable, Any
 
 if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -71,7 +71,12 @@ def detect_sample_info(file_path: str) -> Tuple[Optional[str], Optional[str], Op
 
     return sample_id, cfg['region'], cfg['direction'], matched_primer
 
-def run_pipeline(input_dir: str, rcrs_path: str, output_dir: str, peak_thresh: float = 0.25, conflict_thresh: float = 0.70):
+def run_pipeline(input_dir: str,
+                 rcrs_path: str,
+                 output_dir: str,
+                 peak_thresh: float = 0.25,
+                 conflict_thresh: float = 0.70,
+                 progress_callback: Optional[Callable[[int, int, str], None]] = None) -> Dict[str, Any]:
     print("=" * 70)
     print("      OPTIMAL TRIMMING PIPELINE (HIGH-THROUGHPUT ENGINE)")
     print("=" * 70)
@@ -113,11 +118,14 @@ def run_pipeline(input_dir: str, rcrs_path: str, output_dir: str, peak_thresh: f
     summary_records = []
     trim_recommendations = []
     processed_count = 0
+    total_tasks = sum(len(regions) for regions in samples_map.values())
 
     # 2. Xử lý từng mẫu
     for sid, regions in samples_map.items():
         for reg, files in regions.items():
             processed_count += 1
+            if progress_callback and total_tasks > 0:
+                progress_callback(processed_count, total_tasks, f"Đang phân tích {sid} ({reg})...")
             fwd_file = files.get("F")
             rev_file = files.get("R")
 
@@ -330,6 +338,17 @@ def run_pipeline(input_dir: str, rcrs_path: str, output_dir: str, peak_thresh: f
     print(f"[✓] Điện di đồ Chromatogram tương tác đối chiếu rCRS (Dạng C): {reporter.html_dir}")
     print(f"[✓] File FASTA chuỗi bảo toàn kèm tọa độ đề xuất: {reporter.fasta_dir}")
     print("=" * 70)
+
+    return {
+        "summary_records": summary_records,
+        "trim_recommendations": trim_recommendations,
+        "trim_csv_path": trim_csv_out,
+        "summary_csv_path": csv_out,
+        "html_dir": reporter.html_dir,
+        "fasta_dir": reporter.fasta_dir,
+        "total_samples": len(samples_map),
+        "processed_count": processed_count
+    }
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optimal Trimming Pipeline for Human mtDNA Sanger Sequencing")
