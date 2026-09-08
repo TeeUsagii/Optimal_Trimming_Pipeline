@@ -47,13 +47,108 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
 
+class ConsoleWindow(ctk.CTkToplevel):
+    """Cửa sổ Console Log chuyên dụng (ẩn mặc định, mở khi bấm F12 hoặc click nút Xem Log)"""
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.title("Terminal Console - Optimal Trimming Pipeline (Nhấn F12 để đóng/mở)")
+        self.geometry("880x520")
+        self.minsize(680, 360)
+        self.parent = parent
+
+        # Set icon nếu có
+        icon_path = find_app_path(os.path.join("assets", "icon.ico"))
+        if os.path.exists(icon_path):
+            try:
+                self.iconbitmap(icon_path)
+            except Exception:
+                pass
+
+        self._setup_ui()
+        self.protocol("WM_DELETE_WINDOW", self.withdraw)
+        self.bind("<F12>", lambda e: self.withdraw())
+
+    def _setup_ui(self):
+        # Header Toolbar
+        head = ctk.CTkFrame(self, fg_color=("white", "#0f172a"), height=48, corner_radius=0)
+        head.pack(fill="x", side="top")
+        head.pack_propagate(False)
+
+        ctk.CTkLabel(
+            head,
+            text="💻 NHẬT KÝ CHI TIẾT DÒNG LỆNH (DEVELOPER CONSOLE)",
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            text_color=("#0284c7", "#38bdf8")
+        ).pack(side="left", padx=16)
+
+        ctk.CTkButton(
+            head,
+            text="Đóng (F12)",
+            width=80,
+            height=28,
+            font=ctk.CTkFont(size=11),
+            fg_color=("#e2e8f0", "#334155"),
+            text_color=("#0f172a", "#f8fafc"),
+            hover_color=("#cbd5e1", "#475569"),
+            command=self.withdraw
+        ).pack(side="right", padx=12)
+
+        ctk.CTkButton(
+            head,
+            text="Sao Chép",
+            width=70,
+            height=28,
+            font=ctk.CTkFont(size=11),
+            fg_color=("#e2e8f0", "#334155"),
+            text_color=("#0f172a", "#f8fafc"),
+            hover_color=("#cbd5e1", "#475569"),
+            command=self._copy_log
+        ).pack(side="right", padx=4)
+
+        ctk.CTkButton(
+            head,
+            text="Xóa Log",
+            width=70,
+            height=28,
+            font=ctk.CTkFont(size=11),
+            fg_color=("#e2e8f0", "#334155"),
+            text_color=("#0f172a", "#f8fafc"),
+            hover_color=("#cbd5e1", "#475569"),
+            command=self._clear_log
+        ).pack(side="right", padx=4)
+
+        # Log Box
+        self.log_text = ctk.CTkTextbox(
+            self,
+            corner_radius=0,
+            font=ctk.CTkFont(family="Consolas", size=11),
+            fg_color=("#f8fafc", "#0b0f19"),
+            text_color=("#0f172a", "#e2e8f0"),
+            wrap="char"
+        )
+        self.log_text.pack(fill="both", expand=True)
+
+    def append_log(self, text: str):
+        self.log_text.insert("end", text + "\n")
+        self.log_text.see("end")
+
+    def _clear_log(self):
+        self.log_text.delete("1.0", "end")
+
+    def _copy_log(self):
+        content = self.log_text.get("1.0", "end-1c")
+        self.clipboard_clear()
+        self.clipboard_append(content)
+        messagebox.showinfo("Thông báo", "Đã sao chép toàn bộ nhật ký vào Clipboard.")
+
+
 class MinimalistTrimmingApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         self.title("Optimal Trimming Pipeline - Human mtDNA Sanger Sequencing")
         self.geometry("1060x780")
-        self.minsize(940, 680)
+        self.minsize(960, 680)
 
         # Set App Icon nếu có
         icon_path = find_app_path(os.path.join("assets", "icon.ico"))
@@ -65,13 +160,21 @@ class MinimalistTrimmingApp(ctk.CTk):
 
         self.pipeline_running = False
         self.last_results: Optional[Dict[str, Any]] = None
+        self.log_lines_count = 0
+
+        # Khởi tạo Cửa sổ Console Toplevel (ẩn sẵn)
+        self.console_win = ConsoleWindow(self)
+        self.console_win.withdraw()
+
+        # Phím tắt toàn cục F12 để mở/đóng Console
+        self.bind_all("<F12>", self._toggle_console)
 
         self._setup_ui()
         self._check_initial_data()
 
     def _setup_ui(self):
         # 1. TOP HEADER BANNER (Minimalist Slate Surface)
-        header_frame = ctk.CTkFrame(self, fg_color=("#f1f5f9", "#0f172a"), corner_radius=0, height=72)
+        header_frame = ctk.CTkFrame(self, fg_color=("#ffffff", "#0f172a"), corner_radius=0, height=72)
         header_frame.pack(fill="x", side="top")
         header_frame.pack_propagate(False)
 
@@ -88,32 +191,34 @@ class MinimalistTrimmingApp(ctk.CTk):
 
         app_subtitle = ctk.CTkLabel(
             title_container,
-            text="Dự đoán ranh giới cắt lọc nhiễu tự động & Trực quan hóa điện di đồ đối chiếu rCRS (Non-destructive)",
+            text="Hệ thống dự đoán ranh giới cắt lọc nhiễu tự động & Trực quan hóa điện di đồ đối chiếu rCRS",
             font=ctk.CTkFont(family="Segoe UI", size=11),
-            text_color=("#64748b", "#94a3b8")
+            text_color=("#475569", "#94a3b8")
         )
         app_subtitle.pack(anchor="w")
 
-        # Nút đổi Dark/Light mode và badge phiên bản
+        # Nút đổi Dark/Light mode và Console toggle
         right_header = ctk.CTkFrame(header_frame, fg_color="transparent")
         right_header.pack(side="right", padx=20, pady=12)
 
-        ver_badge = ctk.CTkLabel(
+        self.btn_header_console = ctk.CTkButton(
             right_header,
-            text="v2.5 Standalone",
-            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text="💻 Console (F12)",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            width=110,
+            height=28,
             fg_color=("#e2e8f0", "#1e293b"),
-            corner_radius=6,
-            padx=8,
-            pady=2,
-            text_color=("#0369a1", "#7dd3fc")
+            text_color=("#0f172a", "#38bdf8"),
+            hover_color=("#cbd5e1", "#334155"),
+            command=self._toggle_console
         )
-        ver_badge.pack(side="right", padx=(10, 0))
+        self.btn_header_console.pack(side="right", padx=(10, 0))
 
         self.theme_switch = ctk.CTkSwitch(
             right_header,
             text="Dark Mode",
-            font=ctk.CTkFont(family="Segoe UI", size=11),
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color=("#0f172a", "#f8fafc"),
             command=self._toggle_theme,
             onvalue="dark",
             offvalue="light"
@@ -129,9 +234,20 @@ class MinimalistTrimmingApp(ctk.CTk):
             segmented_button_selected_color=("#0284c7", "#0284c7"),
             segmented_button_selected_hover_color=("#0369a1", "#0369a1"),
             segmented_button_unselected_color=("#e2e8f0", "#1e293b"),
-            segmented_button_fg_color=("#cbd5e1", "#0f172a")
+            segmented_button_unselected_hover_color=("#cbd5e1", "#334155"),
+            segmented_button_fg_color=("#f1f5f9", "#0f172a")
         )
         self.tabview.pack(fill="both", expand=True, padx=16, pady=(10, 14))
+
+        # CẤU HÌNH ĐỘ TƯƠNG PHẢN CHỮ TABVIEW TRONG CẢ LIGHT & DARK MODE
+        self.tabview._segmented_button.configure(
+            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold"),
+            text_color=("#0f172a", "#f8fafc"),
+            selected_color=("#0284c7", "#0284c7"),
+            selected_hover_color=("#0369a1", "#0369a1"),
+            unselected_color=("#e2e8f0", "#1e293b"),
+            unselected_hover_color=("#cbd5e1", "#334155")
+        )
 
         self.tab_analysis = self.tabview.add("⚡ Phân Tích & Giám Sát")
         self.tab_results = self.tabview.add("📊 Kết Quả QC & Sequencher")
@@ -141,27 +257,35 @@ class MinimalistTrimmingApp(ctk.CTk):
         self._build_results_tab()
         self._build_settings_tab()
 
+    def _toggle_console(self, event=None):
+        """Ẩn/hiện cửa sổ Developer Console (F12)"""
+        if self.console_win.winfo_viewable():
+            self.console_win.withdraw()
+        else:
+            self.console_win.deiconify()
+            self.console_win.lift()
+
     # -------------------------------------------------------------
-    # TAB 1: PHÂN TÍCH & GIÁM SÁT
+    # TAB 1: PHÂN TÍCH & GIÁM SÁT (MINIMALIST & CLEAN, KHÔNG BỊ TRÀN LOG)
     # -------------------------------------------------------------
     def _build_analysis_tab(self):
         tab = self.tab_analysis
 
         # Section 1: Card Cấu hình dữ liệu
         io_card = ctk.CTkFrame(tab, corner_radius=10, fg_color=("#f8fafc", "#1e293b"), border_width=1, border_color=("#e2e8f0", "#334155"))
-        io_card.pack(fill="x", padx=10, pady=(10, 8), ipady=6)
+        io_card.pack(fill="x", padx=12, pady=(10, 8), ipady=6)
 
         ctk.CTkLabel(
             io_card,
-            text="Cấu Hình Dữ Liệu Vào / Ra",
+            text="📁 Cấu Hình Dữ Liệu Vào / Ra",
             font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
             text_color=("#0f172a", "#f8fafc")
         ).pack(anchor="w", padx=14, pady=(6, 4))
 
         # Input Row
         in_row = ctk.CTkFrame(io_card, fg_color="transparent")
-        in_row.pack(fill="x", padx=14, pady=3)
-        ctk.CTkLabel(in_row, text="Thư mục file .ab1:", width=160, anchor="w", font=ctk.CTkFont(size=12)).pack(side="left")
+        in_row.pack(fill="x", padx=14, pady=4)
+        ctk.CTkLabel(in_row, text="Thư mục file .ab1:", width=160, anchor="w", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
         self.input_var = tk.StringVar()
         self.input_entry = ctk.CTkEntry(in_row, textvariable=self.input_var, placeholder_text="Chọn thư mục chứa file .ab1 cần phân tích...")
         self.input_entry.pack(side="left", fill="x", expand=True, padx=8)
@@ -172,7 +296,7 @@ class MinimalistTrimmingApp(ctk.CTk):
         self.scan_status_lbl = ctk.CTkLabel(
             io_card,
             text="",
-            font=ctk.CTkFont(family="Segoe UI", size=11),
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
             text_color="#10b981",
             anchor="w"
         )
@@ -180,8 +304,8 @@ class MinimalistTrimmingApp(ctk.CTk):
 
         # rCRS Row
         rcrs_row = ctk.CTkFrame(io_card, fg_color="transparent")
-        rcrs_row.pack(fill="x", padx=14, pady=3)
-        ctk.CTkLabel(rcrs_row, text="Chuỗi chuẩn rCRS (.fasta):", width=160, anchor="w", font=ctk.CTkFont(size=12)).pack(side="left")
+        rcrs_row.pack(fill="x", padx=14, pady=4)
+        ctk.CTkLabel(rcrs_row, text="Chuỗi chuẩn rCRS (.fasta):", width=160, anchor="w", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
         self.rcrs_var = tk.StringVar()
         self.rcrs_entry = ctk.CTkEntry(rcrs_row, textvariable=self.rcrs_var, placeholder_text="Đường dẫn file rCRS.fasta...")
         self.rcrs_entry.pack(side="left", fill="x", expand=True, padx=8)
@@ -189,89 +313,133 @@ class MinimalistTrimmingApp(ctk.CTk):
 
         # Output Row
         out_row = ctk.CTkFrame(io_card, fg_color="transparent")
-        out_row.pack(fill="x", padx=14, pady=3)
-        ctk.CTkLabel(out_row, text="Thư mục lưu kết quả:", width=160, anchor="w", font=ctk.CTkFont(size=12)).pack(side="left")
+        out_row.pack(fill="x", padx=14, pady=4)
+        ctk.CTkLabel(out_row, text="Thư mục lưu kết quả:", width=160, anchor="w", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
         self.output_var = tk.StringVar(value=os.path.join(EXE_DIR, "output"))
         self.output_entry = ctk.CTkEntry(out_row, textvariable=self.output_var, placeholder_text="Thư mục xuất báo cáo...")
         self.output_entry.pack(side="left", fill="x", expand=True, padx=8)
         ctk.CTkButton(out_row, text="Chọn Thư Mục...", width=110, command=self._browse_output).pack(side="right")
 
-        # Section 2: Action & Progress Card
+        # Section 2: Action & Live Process Monitor Card (Thay thế khung đen to đùng bằng giao diện tối giản, hiện đại)
         action_card = ctk.CTkFrame(tab, corner_radius=10, fg_color=("#f8fafc", "#1e293b"), border_width=1, border_color=("#e2e8f0", "#334155"))
-        action_card.pack(fill="x", padx=10, pady=6, ipady=4)
+        action_card.pack(fill="x", padx=12, pady=8, ipady=6)
 
-        btn_row = ctk.CTkFrame(action_card, fg_color="transparent")
-        btn_row.pack(fill="x", padx=14, pady=(8, 4))
+        ctk.CTkLabel(
+            action_card,
+            text="⚡ Tiến Trình & Điều Khiển Phân Tích",
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            text_color=("#0f172a", "#f8fafc")
+        ).pack(anchor="w", padx=14, pady=(6, 8))
 
+        # Nút bắt đầu phân tích nổi bật
         self.run_btn = ctk.CTkButton(
-            btn_row,
+            action_card,
             text="▶ BẮT ĐẦU PHÂN TÍCH HÀNG LOẠT (1-CLICK RUN)",
             font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
             fg_color="#0284c7",
             hover_color="#0369a1",
-            height=40,
+            height=44,
+            corner_radius=8,
             command=self._start_pipeline
         )
-        self.run_btn.pack(side="left", fill="x", expand=True, padx=(0, 8))
+        self.run_btn.pack(fill="x", padx=14, pady=(2, 8))
+
+        # Progress bar
+        self.progress_bar = ctk.CTkProgressBar(action_card, height=12, corner_radius=6, progress_color="#38bdf8")
+        self.progress_bar.set(0)
+        self.progress_bar.pack(fill="x", padx=14, pady=(6, 4))
+
+        # Live Activity Feed Pill (thẻ hiển thị bước phân tích hiện tại mượt mà)
+        ticker_frame = ctk.CTkFrame(action_card, fg_color=("#e2e8f0", "#0f172a"), corner_radius=8, height=36)
+        ticker_frame.pack(fill="x", padx=14, pady=(4, 8))
+        ticker_frame.pack_propagate(False)
+
+        self.status_dot = ctk.CTkLabel(
+            ticker_frame,
+            text="●",
+            font=ctk.CTkFont(size=14),
+            text_color="#10b981",
+            width=24
+        )
+        self.status_dot.pack(side="left", padx=(10, 0))
+
+        self.progress_lbl = ctk.CTkLabel(
+            ticker_frame,
+            text="Sẵn sàng phân tích. Bấm nút phía trên để bắt đầu.",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color=("#0f172a", "#f8fafc"),
+            anchor="w"
+        )
+        self.progress_lbl.pack(side="left", fill="x", expand=True, padx=4)
+
+        # Hàng nút thao tác nhanh
+        action_btn_row = ctk.CTkFrame(action_card, fg_color="transparent")
+        action_btn_row.pack(fill="x", padx=14, pady=(4, 6))
+
+        self.btn_open_console = ctk.CTkButton(
+            action_btn_row,
+            text="💻 Xem Nhật Ký / Console (F12)",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color=("#cbd5e1", "#334155"),
+            text_color=("#0f172a", "#f8fafc"),
+            hover_color=("#94a3b8", "#475569"),
+            height=34,
+            command=self._toggle_console
+        )
+        self.btn_open_console.pack(side="left", padx=(0, 6))
 
         self.open_res_btn = ctk.CTkButton(
-            btn_row,
+            action_btn_row,
             text="📊 Mở Bảng Khuyến Nghị (CSV)",
             font=ctk.CTkFont(size=12),
             fg_color=("#0f766e", "#0f766e"),
             hover_color=("#115e59", "#115e59"),
-            height=40,
+            height=34,
             command=self._open_trim_csv
         )
-        self.open_res_btn.pack(side="right", padx=(0, 0))
+        self.open_res_btn.pack(side="left", padx=6)
 
-        # Progress bar
-        self.progress_bar = ctk.CTkProgressBar(action_card, height=10, corner_radius=5, progress_color="#38bdf8")
-        self.progress_bar.set(0)
-        self.progress_bar.pack(fill="x", padx=14, pady=(6, 2))
+        self.open_dir_btn = ctk.CTkButton(
+            action_btn_row,
+            text="📁 Mở Thư Mục Kết Quả",
+            font=ctk.CTkFont(size=12),
+            fg_color=("#475569", "#475569"),
+            hover_color=("#64748b", "#64748b"),
+            height=34,
+            command=self._open_output_folder
+        )
+        self.open_dir_btn.pack(side="right", padx=(6, 0))
 
-        self.progress_lbl = ctk.CTkLabel(
-            action_card,
-            text="Sẵn sàng thực hiện phân tích",
-            font=ctk.CTkFont(size=11),
+        # Section 3: Thẻ Xem Nhanh Kết Quả Ngay Trên Tab 1 (Sau khi chạy xong sẽ tự hiện)
+        self.quick_summary_card = ctk.CTkFrame(tab, corner_radius=10, fg_color=("#f8fafc", "#1e293b"), border_width=1, border_color=("#e2e8f0", "#334155"))
+        self.quick_summary_card.pack(fill="x", padx=12, pady=6, ipady=8)
+
+        self.quick_summary_head = ctk.CTkLabel(
+            self.quick_summary_card,
+            text="📊 Tóm Tắt Nhanh Lần Chạy Gần Nhất",
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            text_color=("#0f172a", "#f8fafc")
+        )
+        self.quick_summary_head.pack(anchor="w", padx=14, pady=(6, 6))
+
+        self.quick_metrics_lbl = ctk.CTkLabel(
+            self.quick_summary_card,
+            text="Chưa có dữ liệu phân tích nào. Hãy bấm 'Bắt đầu phân tích hàng loạt' để tạo báo cáo.",
+            font=ctk.CTkFont(family="Segoe UI", size=12),
             text_color=("#64748b", "#94a3b8")
         )
-        self.progress_lbl.pack(anchor="w", padx=14, pady=(0, 6))
+        self.quick_metrics_lbl.pack(anchor="w", padx=14, pady=(0, 6))
 
-        # Section 3: Log Console Card
-        log_card = ctk.CTkFrame(tab, corner_radius=10, fg_color=("#f8fafc", "#1e293b"), border_width=1, border_color=("#e2e8f0", "#334155"))
-        log_card.pack(fill="both", expand=True, padx=10, pady=(6, 8))
-
-        log_head = ctk.CTkFrame(log_card, fg_color="transparent")
-        log_head.pack(fill="x", padx=14, pady=(8, 4))
-
-        ctk.CTkLabel(
-            log_head,
-            text="Nhật Ký Xử Lý Trực Tiếp (Real-time Console)",
-            font=ctk.CTkFont(family="Segoe UI", size=12, weight="bold")
-        ).pack(side="left")
-
-        ctk.CTkButton(
-            log_head,
-            text="Xóa Log",
-            width=70,
-            height=26,
-            font=ctk.CTkFont(size=11),
-            fg_color=("#cbd5e1", "#334155"),
-            text_color=("#0f172a", "#f8fafc"),
-            hover_color=("#94a3b8", "#475569"),
-            command=self._clear_log
-        ).pack(side="right")
-
-        self.log_box = ctk.CTkTextbox(
-            log_card,
-            corner_radius=8,
-            font=ctk.CTkFont(family="Consolas", size=11),
-            fg_color=("#0f172a", "#0b0f19"),
-            text_color="#e2e8f0",
-            wrap="char"
+        self.quick_nav_btn = ctk.CTkButton(
+            self.quick_summary_card,
+            text="👉 Xem Chi Tiết Bảng QC & Khuyến Nghị Sequencher (Tab 2)",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            fg_color="#0284c7",
+            hover_color="#0369a1",
+            height=32,
+            command=lambda: self.tabview.set("📊 Kết Quả QC & Sequencher")
         )
-        self.log_box.pack(fill="both", expand=True, padx=12, pady=(0, 10))
+        self.quick_nav_btn.pack(anchor="w", padx=14, pady=(2, 6))
 
     # -------------------------------------------------------------
     # TAB 2: KẾT QUẢ QC & SEQUENCHER
@@ -298,7 +466,8 @@ class MinimalistTrimmingApp(ctk.CTk):
         ctk.CTkLabel(
             table_header,
             text="Bảng Tổng Hợp Kiểm Soát Chất Lượng (QC Matrix) & Tọa Độ Cắt Sequencher",
-            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold")
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            text_color=("#0f172a", "#f8fafc")
         ).pack(side="left")
 
         ctk.CTkLabel(
@@ -362,6 +531,7 @@ class MinimalistTrimmingApp(ctk.CTk):
             text="📑 Mở Tổng Hợp Kiểu Gen (CSV)",
             font=ctk.CTkFont(size=12),
             fg_color=("#334155", "#334155"),
+            text_color="#ffffff",
             hover_color=("#475569", "#475569"),
             height=36,
             command=self._open_summary_csv
@@ -408,27 +578,50 @@ class MinimalistTrimmingApp(ctk.CTk):
         return val_lbl
 
     def _style_treeview(self):
+        mode = ctk.get_appearance_mode()
         style = ttk.Style()
         style.theme_use('clam')
+
+        if mode == "Light":
+            bg_col = "#ffffff"
+            fg_col = "#0f172a"
+            head_bg = "#f1f5f9"
+            head_fg = "#0284c7"
+            sel_bg = "#bae6fd"
+            sel_fg = "#0f172a"
+        else:
+            bg_col = "#1e293b"
+            fg_col = "#f8fafc"
+            head_bg = "#0f172a"
+            head_fg = "#38bdf8"
+            sel_bg = "#0369a1"
+            sel_fg = "#ffffff"
+
         style.configure(
             "Treeview",
-            background="#1e293b",
-            foreground="#f8fafc",
-            fieldbackground="#1e293b",
+            background=bg_col,
+            foreground=fg_col,
+            fieldbackground=bg_col,
             rowheight=28,
             font=("Segoe UI", 10)
         )
         style.configure(
             "Treeview.Heading",
-            background="#0f172a",
-            foreground="#38bdf8",
+            background=head_bg,
+            foreground=head_fg,
             relief="flat",
             font=("Segoe UI", 10, "bold")
         )
-        style.map("Treeview", background=[('selected', '#0369a1')])
-        self.tree.tag_configure("PASS", foreground="#34d399")
-        self.tree.tag_configure("REVIEW", foreground="#fbbf24")
-        self.tree.tag_configure("DENY", foreground="#f87171")
+        style.map("Treeview", background=[('selected', sel_bg)], foreground=[('selected', sel_fg)])
+
+        if mode == "Light":
+            self.tree.tag_configure("PASS", foreground="#059669")
+            self.tree.tag_configure("REVIEW", foreground="#d97706")
+            self.tree.tag_configure("DENY", foreground="#dc2626")
+        else:
+            self.tree.tag_configure("PASS", foreground="#34d399")
+            self.tree.tag_configure("REVIEW", foreground="#fbbf24")
+            self.tree.tag_configure("DENY", foreground="#f87171")
 
     # -------------------------------------------------------------
     # TAB 3: CÀI ĐẶT THUẬT TOÁN TRACY
@@ -443,13 +636,14 @@ class MinimalistTrimmingApp(ctk.CTk):
         ctk.CTkLabel(
             param_card,
             text="Ngưỡng Nhận Diện Dị Thể & Lỗi Sóng Quang Học (Tracy Engine)",
-            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold")
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            text_color=("#0f172a", "#f8fafc")
         ).pack(anchor="w", padx=14, pady=(6, 10))
 
         # Slider 1: Secondary Ratio
         s1_box = ctk.CTkFrame(param_card, fg_color="transparent")
         s1_box.pack(fill="x", padx=14, pady=4)
-        ctk.CTkLabel(s1_box, text="Ngưỡng Đỉnh Phụ Tracy (Secondary Peak Ratio):", width=300, anchor="w", font=ctk.CTkFont(size=12)).pack(side="left")
+        ctk.CTkLabel(s1_box, text="Ngưỡng Đỉnh Phụ Tracy (Secondary Peak Ratio):", width=300, anchor="w", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
         self.thresh_var = tk.DoubleVar(value=0.25)
         self.thresh_lbl = ctk.CTkLabel(s1_box, text="0.25", width=50, font=ctk.CTkFont(size=12, weight="bold"), text_color="#38bdf8")
         self.thresh_lbl.pack(side="right")
@@ -473,7 +667,7 @@ class MinimalistTrimmingApp(ctk.CTk):
         # Slider 2: Conflict Threshold
         s2_box = ctk.CTkFrame(param_card, fg_color="transparent")
         s2_box.pack(fill="x", padx=14, pady=4)
-        ctk.CTkLabel(s2_box, text="Ngưỡng Chập Peak / Lỗi Cảm Biến (?):", width=300, anchor="w", font=ctk.CTkFont(size=12)).pack(side="left")
+        ctk.CTkLabel(s2_box, text="Ngưỡng Chập Peak / Lỗi Cảm Biến (?):", width=300, anchor="w", font=ctk.CTkFont(size=12, weight="bold")).pack(side="left")
         self.conflict_var = tk.DoubleVar(value=0.70)
         self.conflict_lbl = ctk.CTkLabel(s2_box, text="0.70", width=50, font=ctk.CTkFont(size=12, weight="bold"), text_color="#38bdf8")
         self.conflict_lbl.pack(side="right")
@@ -501,7 +695,8 @@ class MinimalistTrimmingApp(ctk.CTk):
         ctk.CTkLabel(
             bio_card,
             text="Quy Chuẩn Phân Tích D-loop Hệ Gen Ty Thể Người (mtDNA Standards)",
-            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold")
+            font=ctk.CTkFont(family="Segoe UI", size=13, weight="bold"),
+            text_color=("#0f172a", "#f8fafc")
         ).pack(anchor="w", padx=14, pady=(8, 6))
 
         info_text = (
@@ -604,13 +799,18 @@ class MinimalistTrimmingApp(ctk.CTk):
         mode = self.theme_switch.get()
         ctk.set_appearance_mode(mode)
         self.theme_switch.configure(text="Dark Mode" if mode == "dark" else "Light Mode")
+        # Đồng bộ màu cho segmented buttons
+        self.tabview._segmented_button.configure(
+            text_color=("#0f172a", "#f8fafc")
+        )
+        self._style_treeview()
 
     def _log(self, text: str):
-        self.log_box.insert("end", text + "\n")
-        self.log_box.see("end")
-
-    def _clear_log(self):
-        self.log_box.delete("1.0", "end")
+        self.log_lines_count += 1
+        self.console_win.append_log(text)
+        # Cập nhật nhãn nút console hiển thị số dòng
+        self.btn_header_console.configure(text=f"💻 Console ({self.log_lines_count})")
+        self.btn_open_console.configure(text=f"💻 Xem Nhật Ký / Console ({self.log_lines_count} dòng - F12)")
 
     def _start_pipeline(self):
         if self.pipeline_running:
@@ -630,11 +830,10 @@ class MinimalistTrimmingApp(ctk.CTk):
         self.pipeline_running = True
         self.run_btn.configure(state="disabled", text="⏳ ĐANG PHÂN TÍCH DỮ LIỆU...")
         self.progress_bar.set(0)
+        self.status_dot.configure(text_color="#f59e0b")
         self.progress_lbl.configure(text="Đang chuẩn bị nạp dữ liệu và kiểm tra...")
-        self._clear_log()
-
-        # Switch to analysis tab
-        self.tabview.set("⚡ Phân Tích & Giám Sát")
+        self.log_lines_count = 0
+        self.console_win._clear_log()
 
         def worker():
             class GuiStdoutRedirector:
@@ -681,13 +880,15 @@ class MinimalistTrimmingApp(ctk.CTk):
         self.run_btn.configure(state="normal", text="▶ BẮT ĐẦU PHÂN TÍCH HÀNG LOẠT (1-CLICK RUN)")
 
     def _on_pipeline_error(self, err_msg: str, full_trace: str):
-        self.progress_lbl.configure(text=f"❌ Có lỗi xảy ra: {err_msg}", text_color="#ef4444")
+        self.status_dot.configure(text_color="#ef4444")
+        self.progress_lbl.configure(text=f"❌ Có lỗi xảy ra: {err_msg}")
         self._log(f"\n[LỖI NGHIÊM TRỌNG]: {err_msg}\n{full_trace}")
-        messagebox.showerror("Lỗi Phân Tích", f"Quá trình phân tích gặp lỗi:\n{err_msg}")
+        messagebox.showerror("Lỗi Phân Tích", f"Quá trình phân tích gặp lỗi:\n{err_msg}\n\n(Bấm F12 để xem chi tiết log lỗi)")
 
     def _on_pipeline_finished(self, res: Optional[Dict[str, Any]]):
         self.progress_bar.set(1.0)
-        self.progress_lbl.configure(text="✓ Phân tích hoàn tất thành công 100%!", text_color="#10b981")
+        self.status_dot.configure(text_color="#10b981")
+        self.progress_lbl.configure(text="✓ Phân tích hoàn tất thành công 100%!")
         self.last_results = res
 
         if not res:
@@ -705,6 +906,15 @@ class MinimalistTrimmingApp(ctk.CTk):
         self.card_pass.configure(text=str(pass_cnt))
         self.card_review.configure(text=str(rev_cnt))
         self.card_deny.configure(text=str(deny_cnt))
+
+        # Cập nhật Thẻ Tóm Tắt Nhanh trên Tab 1
+        summary_text = (
+            f"✓ Đã hoàn tất: {total} mẫu phân tích  |  "
+            f"PASS (Đạt chuẩn): {pass_cnt}  |  "
+            f"REVIEW (Soi lại): {rev_cnt}  |  "
+            f"DENY (Cảnh báo làm lại): {deny_cnt}"
+        )
+        self.quick_metrics_lbl.configure(text=summary_text, text_color=("#0f172a", "#38bdf8"))
 
         # Cập nhật Treeview
         for item in self.tree.get_children():
