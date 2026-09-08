@@ -161,6 +161,7 @@ class MinimalistTrimmingApp(ctk.CTk):
         self.pipeline_running = False
         self.last_results: Optional[Dict[str, Any]] = None
         self.log_lines_count = 0
+        self.all_summary_records: List[Dict[str, Any]] = []
 
         # Khởi tạo Cửa sổ Console Toplevel (ẩn sẵn)
         self.console_win = ConsoleWindow(self)
@@ -462,7 +463,7 @@ class MinimalistTrimmingApp(ctk.CTk):
         table_container.pack(fill="both", expand=True, padx=10, pady=6)
 
         table_header = ctk.CTkFrame(table_container, fg_color="transparent")
-        table_header.pack(fill="x", padx=14, pady=(8, 4))
+        table_header.pack(fill="x", padx=14, pady=(8, 2))
         ctk.CTkLabel(
             table_header,
             text="Bảng Tổng Hợp Kiểm Soát Chất Lượng (QC Matrix) & Tọa Độ Cắt Sequencher",
@@ -472,10 +473,57 @@ class MinimalistTrimmingApp(ctk.CTk):
 
         ctk.CTkLabel(
             table_header,
-            text="(Double click vào dòng bất kỳ để mở Biểu Đồ Điện Di Đồ HTML)",
+            text="(Double-click hoặc chọn dòng rồi bấm 'Soi Điện Di Đồ')",
             font=ctk.CTkFont(size=11),
             text_color=("#64748b", "#94a3b8")
         ).pack(side="right")
+
+        # QC Filter & Quick Action Row
+        filter_bar = ctk.CTkFrame(table_container, fg_color="transparent")
+        filter_bar.pack(fill="x", padx=14, pady=(2, 6))
+
+        ctk.CTkLabel(
+            filter_bar,
+            text="Lọc theo QC:",
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            text_color=("#475569", "#94a3b8")
+        ).pack(side="left", padx=(0, 6))
+
+        self.filter_seg = ctk.CTkSegmentedButton(
+            filter_bar,
+            values=["Tất Cả", "PASS ✓", "REVIEW 👁️", "DENY ⚠️"],
+            command=self._on_filter_changed,
+            font=ctk.CTkFont(family="Segoe UI", size=11, weight="bold"),
+            selected_color="#0284c7",
+            selected_hover_color="#0369a1",
+            unselected_color=("#e2e8f0", "#1e293b"),
+            unselected_hover_color=("#cbd5e1", "#334155")
+        )
+        self.filter_seg.set("Tất Cả")
+        self.filter_seg.pack(side="left", padx=(0, 10))
+
+        self.btn_open_selected_chroma = ctk.CTkButton(
+            filter_bar,
+            text="📈 Soi Điện Di Đồ Mẫu Đang Chọn",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            fg_color="#0284c7",
+            hover_color="#0369a1",
+            height=28,
+            command=self._open_selected_chromatogram
+        )
+        self.btn_open_selected_chroma.pack(side="right", padx=(6, 0))
+
+        self.btn_copy_coords = ctk.CTkButton(
+            filter_bar,
+            text="📋 Sao Chép Tọa Độ Sequencher",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            fg_color=("#e2e8f0", "#334155"),
+            text_color=("#0f172a", "#f8fafc"),
+            hover_color=("#cbd5e1", "#475569"),
+            height=28,
+            command=self._copy_selected_trim
+        )
+        self.btn_copy_coords.pack(side="right", padx=(6, 0))
 
         # Treeview bọc trong CTkFrame
         tree_frame = ctk.CTkFrame(table_container, fg_color="transparent")
@@ -745,6 +793,50 @@ class MinimalistTrimmingApp(ctk.CTk):
 
         self._on_input_path_changed()
 
+        # 3. Tự động nạp dữ liệu kết quả phân tích gần nhất nếu có sẵn
+        out_cand = self.output_var.get().strip()
+        summary_f = os.path.join(out_cand, "mtDNA_batch_summary.csv")
+        if not os.path.exists(summary_f):
+            demo_cand = find_app_path(os.path.join("output_demo", "mtDNA_batch_summary.csv"))
+            if os.path.exists(demo_cand):
+                summary_f = demo_cand
+                self.output_var.set(find_app_path("output_demo"))
+
+        if os.path.exists(summary_f):
+            try:
+                import csv
+                loaded_recs = []
+                with open(summary_f, "r", encoding="utf-8-sig") as f:
+                    reader = csv.DictReader(f)
+                    for r in reader:
+                        qc = r.get("QC_Status", "REVIEW")
+                        if "REVIEW" in qc:
+                            qc = "REVIEW"
+                        r["QC_Status"] = qc
+                        if "Coverage_%" in r:
+                            try:
+                                r["Coverage_%"] = float(r["Coverage_%"])
+                            except Exception:
+                                pass
+                        loaded_recs.append(r)
+                if loaded_recs:
+                    self.all_summary_records = loaded_recs
+                    total = len(loaded_recs)
+                    pass_cnt = sum(1 for r in loaded_recs if r.get("QC_Status") == "PASS")
+                    rev_cnt = sum(1 for r in loaded_recs if r.get("QC_Status") == "REVIEW")
+                    deny_cnt = sum(1 for r in loaded_recs if r.get("QC_Status") == "DENY")
+                    self.card_total.configure(text=str(total))
+                    self.card_pass.configure(text=str(pass_cnt))
+                    self.card_review.configure(text=str(rev_cnt))
+                    self.card_deny.configure(text=str(deny_cnt))
+                    self._populate_treeview(loaded_recs)
+                    self.quick_metrics_lbl.configure(
+                        text=f"✓ Đã nạp kết quả gần nhất: {total} mẫu | PASS: {pass_cnt} | REVIEW: {rev_cnt} | DENY: {deny_cnt}",
+                        text_color=("#0f172a", "#38bdf8")
+                    )
+            except Exception:
+                pass
+
     def _on_input_path_changed(self):
         """Quét và đếm nhanh số lượng file .ab1 và mẫu trong thư mục đã chọn"""
         in_path = self.input_var.get().strip()
@@ -895,6 +987,7 @@ class MinimalistTrimmingApp(ctk.CTk):
             return
 
         summary_records = res.get("summary_records", [])
+        self.all_summary_records = summary_records
 
         # Cập nhật KPI
         total = len(summary_records)
@@ -916,11 +1009,42 @@ class MinimalistTrimmingApp(ctk.CTk):
         )
         self.quick_metrics_lbl.configure(text=summary_text, text_color=("#0f172a", "#38bdf8"))
 
-        # Cập nhật Treeview
+        # Cập nhật Treeview theo bộ lọc hiện tại
+        self.filter_seg.set("Tất Cả")
+        self._populate_treeview(summary_records)
+
+        # Chuyển sang Tab Kết Quả để kỹ thuật viên xem ngay
+        self.tabview.set("📊 Kết Quả QC & Sequencher")
+        messagebox.showinfo(
+            "Phân Tích Thành Công",
+            f"Đã xử lý xong toàn bộ {total} mẫu phân tích!\n\n"
+            f"• PASS (Đạt chuẩn): {pass_cnt}\n"
+            f"• REVIEW (Cần soi lại): {rev_cnt}\n"
+            f"• DENY (Cảnh báo làm lại): {deny_cnt}\n\n"
+            "Bạn có thể mở ngay Bảng Khuyến Nghị Sequencher (CSV) hoặc Điện di đồ tương tác (HTML)."
+        )
+
+    def _on_filter_changed(self, value=None):
+        """Lọc danh sách mẫu trong bảng theo trạng thái QC"""
+        if not self.all_summary_records:
+            return
+        val = value or self.filter_seg.get()
+        if "PASS" in val:
+            filtered = [r for r in self.all_summary_records if r.get("QC_Status") == "PASS"]
+        elif "REVIEW" in val:
+            filtered = [r for r in self.all_summary_records if r.get("QC_Status") == "REVIEW"]
+        elif "DENY" in val:
+            filtered = [r for r in self.all_summary_records if r.get("QC_Status") == "DENY"]
+        else:
+            filtered = self.all_summary_records
+        self._populate_treeview(filtered)
+
+    def _populate_treeview(self, records: List[Dict[str, Any]]):
+        """Hiển thị danh sách mẫu lên bảng Treeview"""
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        for rec in summary_records:
+        for rec in records:
             qc = rec.get("QC_Status", "REVIEW")
             tag = qc if qc in ["PASS", "REVIEW", "DENY"] else "REVIEW"
             rec_text = rec.get("Lab_Recommendation", "")
@@ -945,22 +1069,18 @@ class MinimalistTrimmingApp(ctk.CTk):
                 tags=(tag,)
             )
 
-        # Chuyển sang Tab Kết Quả để kỹ thuật viên xem ngay
-        self.tabview.set("📊 Kết Quả QC & Sequencher")
-        messagebox.showinfo(
-            "Phân Tích Thành Công",
-            f"Đã xử lý xong toàn bộ {total} mẫu phân tích!\n\n"
-            f"• PASS (Đạt chuẩn): {pass_cnt}\n"
-            f"• REVIEW (Cần soi lại): {rev_cnt}\n"
-            f"• DENY (Cảnh báo làm lại): {deny_cnt}\n\n"
-            "Bạn có thể mở ngay Bảng Khuyến Nghị Sequencher (CSV) hoặc Điện di đồ tương tác (HTML)."
-        )
-
-    def _on_tree_double_click(self, event):
-        """Double click vào một dòng trong Treeview để mở Điện Di Đồ HTML tương ứng"""
+    def _open_selected_chromatogram(self):
+        """Mở biểu đồ điện di đồ HTML của mẫu đang được chọn trong bảng"""
         sel = self.tree.selection()
-        if not sel or not self.last_results:
-            return
+        if not sel:
+            children = self.tree.get_children()
+            if children:
+                self.tree.selection_set(children[0])
+                sel = (children[0],)
+            else:
+                messagebox.showinfo("Thông báo", "Chưa có mẫu nào trong bảng kết quả để soi.")
+                return
+
         item = self.tree.item(sel[0])
         vals = item.get("values", [])
         if len(vals) < 2:
@@ -968,17 +1088,69 @@ class MinimalistTrimmingApp(ctk.CTk):
 
         sid = vals[0]
         reg = vals[1]
-        html_dir = self.last_results.get("html_dir")
-        if html_dir and os.path.exists(html_dir):
-            # Tìm file chromatogram của mẫu này
+        out_dir = self.output_var.get().strip()
+        html_dir = os.path.join(out_dir, "html_reports")
+
+        if os.path.exists(html_dir):
             pat = os.path.join(html_dir, f"{sid}_{reg}_*.html")
             matches = glob.glob(pat)
             if matches:
                 os.startfile(matches[0])
                 return
-
-            # Thử mở thư mục html
+            pat_sample = os.path.join(html_dir, f"{sid}_*.html")
+            matches_s = glob.glob(pat_sample)
+            if matches_s:
+                os.startfile(matches_s[0])
+                return
             os.startfile(html_dir)
+        else:
+            messagebox.showinfo("Thông báo", f"Thư mục html_reports chưa tồn tại trong:\n{out_dir}")
+
+    def _copy_selected_trim(self):
+        """Sao chép thông số cắt Sequencher của mẫu đang chọn vào clipboard"""
+        sel = self.tree.selection()
+        if not sel:
+            messagebox.showinfo("Thông báo", "Vui lòng click chọn một mẫu trong bảng trước khi sao chép.")
+            return
+
+        item = self.tree.item(sel[0])
+        vals = item.get("values", [])
+        if len(vals) < 2:
+            return
+
+        sid = vals[0]
+        reg = vals[1]
+        qc = vals[6] if len(vals) > 6 else ""
+
+        out_dir = self.output_var.get().strip()
+        trim_csv = os.path.join(out_dir, "trimming_recommendations.csv")
+        found_rows = []
+        if os.path.exists(trim_csv):
+            try:
+                import csv
+                with open(trim_csv, "r", encoding="utf-8-sig") as f:
+                    reader = csv.DictReader(f)
+                    for r in reader:
+                        if r.get("Sample_ID") == sid and r.get("Region") == reg:
+                            found_rows.append(r)
+            except Exception:
+                pass
+
+        if found_rows:
+            lines = [f"Mẫu: {sid} | Vùng: {reg} | Trạng thái QC: {qc}"]
+            for r in found_rows:
+                lines.append(f"• File {r.get('Direction', '')}: 5' Cut = {r.get('Suggested_5p_Cut_1based', '')}, 3' Cut = {r.get('Suggested_3p_Cut_1based', '')} (Giữ lại {r.get('Retained_Length_bp', '')} bp)")
+            text_to_copy = "\n".join(lines)
+        else:
+            text_to_copy = f"Mẫu: {sid} | Vùng: {reg} | QC: {qc}"
+
+        self.clipboard_clear()
+        self.clipboard_append(text_to_copy)
+        messagebox.showinfo("Đã Sao Chép Tọa Độ", f"Đã lưu tọa độ cắt Sequencher của {sid} ({reg}) vào bộ nhớ tạm!\n\n{text_to_copy}")
+
+    def _on_tree_double_click(self, event):
+        """Double click vào một dòng trong Treeview để mở Điện Di Đồ HTML tương ứng"""
+        self._open_selected_chromatogram()
 
     def _open_trim_csv(self):
         out_dir = self.output_var.get()
