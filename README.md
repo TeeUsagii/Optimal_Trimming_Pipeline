@@ -20,7 +20,7 @@ Hệ thống phân tích và dự đoán vị trí cắt lọc nhiễu tự đ�
    - Tại vùng trượt Poly-C ở HV1 (16184 - 16193) và HV2 (303 - 315), hiện tượng trượt pha (Stutter) thường gây phân đôi đỉnh sóng.
    - Hệ thống **bảo toàn nguyên vẹn dải sau Poly-C** để làm dữ liệu đối sánh chéo giữa chiều đọc mồi xuôi (Forward) và mồi ngược (Reverse), ưu tiên chiều đọc đối diện sạch để tạo consensus.
 
-3. **Cây quyết định QC nghiêm ngặt & Nhãn `DENY`:**
+3. * Quyết định QC nghiêm ngặt & Nhãn `DENY`:**
    - Tự động phát hiện mẫu suy thoái, chập peak quang học (`?`), hoặc đứt đoạn lớn.
    - Gán nhãn **`DENY` (Khuyến cáo phòng lab làm lại mẫu)** đối với các mẫu không phủ kín >= 85% dải mục tiêu hoặc nghi ngờ nhiễm tạp chéo (>= 20 SNPs).
 
